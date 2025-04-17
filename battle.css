@@ -1,0 +1,99 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    overflow: hidden;
+}
+
+.canvas {
+    position: absolute;
+    background-color: #94adbb;
+}
+
+.player-bar {
+    width: 100vw;
+    height: 19vh;
+    position: fixed;
+    color: white;
+    bottom: 0;
+    z-index: 1;
+}
+
+img {
+    position: relative;
+    left: 10%;
+    width: 80%;
+    height: 100%;
+}
+
+.health-bar {
+    position: absolute;
+    z-index: 1;
+    background-color: limegreen;
+}
+
+#bar-1 {
+    left: 504px;
+    top: 368px;
+    height: 13px;
+    width: 200px;
+    animation: increase-200 3s linear;
+}
+
+#bar-2 {
+    left: 1369px;
+    top: 701px;
+    height: 10px;
+    width: 209px;
+    animation: increase-209 3s linear;
+}
+
+.typewriter {
+    font-family: "VT323", serif;
+    position: absolute;
+    left: 14%;
+    font-size: 3rem;
+    top: 14%;
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 0 auto;
+    animation: typing 3.5s steps(40, end);
+}
+
+@keyframes typing {
+    from {
+        width: 0
+    }
+    to {
+        width: 100%
+    }
+}
+
+@keyframes increase-200 {
+    0% {
+        width: 0;
+    }
+    66.6% {
+        width: 0;
+    }
+    100% {
+        width: 200px;
+    }
+}
+
+
+@keyframes increase-209 {
+    0% {
+        width: 0;
+    }
+    66.6% {
+        width: 0;
+    }
+    100% {
+        width: 209px;
+    }
+}

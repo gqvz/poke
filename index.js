@@ -1,11 +1,11 @@
-
 const canvas = document.querySelector('canvas');
 const context = canvas.getContext('2d');
 context.imageSmoothingEnabled = false;
 
 let playerDirection = "down";
 let walkingIndex = 0;
-const speed =10;
+const speed = 15;
+let mapX = 0;
 
 const keyDirectionMap = {
     'w': 'up',
@@ -18,42 +18,69 @@ const keyDirectionMap = {
     'ArrowRight': 'right'
 }
 
-window.onkeydown = event => {
+window.addEventListener('keydown', (event) => {
     if (event.key in keyDirectionMap) {
         playerDirection = keyDirectionMap[event.key];
         walkingIndex += speed;
 
+        let prevPlayerX = playerX;
+        let prevPlayerY = playerY;
 
         if (playerDirection === 'up') {
-            playerY += speed;
+            playerY += speed * 0.5;
         }
         if (playerDirection === 'down') {
-            playerY -= speed;
+            playerY -= speed * 0.5;
         }
         if (playerDirection === 'left') {
-            playerX += speed;
+            playerX += speed * 0.5;
         }
         if (playerDirection === 'right') {
-            playerX -= speed;
+            playerX -= speed * 0.5;
         }
+        const playerWalkCheck = !canWalk(-playerX, -playerY + 70) || !canWalk(-playerX, -playerY + 90) || !canWalk(-playerX + 40, -playerY + 70);
+        if (playerWalkCheck) {
+            playerX = prevPlayerX;
+            playerY = prevPlayerY;
+        }
+
+        walkingIndex %= speed * 4;
+        console.log(`${playerX} - ${playerY}`);
+
+        if (playerX < -canvas.width/2 && !playerWalkCheck && playerDirection === 'right') {
+            mapX+=1;
+        }
+
+        if (playerX > -canvas.width/2 && !playerWalkCheck && playerDirection === 'left') {
+            mapX-=1;
+        }
+        
+        // mapMask[-playerY][-playerX] = 1;
+        console.log(mapX)
+        mapX = Math.max(0, Math.min(mapX, 175));
+        playerX = Math.min(0, Math.max(playerX, -1920));
+        playerY = Math.min(0, Math.max(playerY, -1080));
     }
 
-    walkingIndex %= speed * 4;
     drawCanvas();
-}
-window.onkeyup = event => {
+});
+
+window.addEventListener('keyup', (event) => {
     if (event.key in keyDirectionMap) {
         playerDirection = keyDirectionMap[event.key];
         walkingIndex = speed * 4;
     }
     drawCanvas();
-}
+});
 
-let playerX = -400;
-let playerY = -50;
+let playerX = -500;
+let playerY = -170;
+const scale = 3;
 
 const map = new Image()
 map.src = './assets/map.png';
+const mapMaskImage = new Image();
+mapMaskImage.src = './assets/map_mask.png'
 
 let playerSprites = []
 for (let direction of ['up', 'down', 'left', 'right']) {
@@ -70,8 +97,19 @@ for (let direction of ['up', 'down', 'left', 'right']) {
 }
 
 function drawCanvas() {
+
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(map, 0, 0, 1920/2, 1080, 0, 0, 1920/1.5, 1080*2);
-    context.drawImage(playerSprites[playerDirection][Math.floor(walkingIndex / (speed * 2))], playerX, playerY, 960, 540, 0, 0, 1000, 1000);
+    context.drawImage(map, mapX, 0, 765, 318, 0, 0, canvas.width*1.3, canvas.height);
+    // context.drawImage(mapMaskImage, 0, 0, 765, 318, mapX, 0, canvas.width*1.3, canvas.height);
+
+    context.drawImage(playerSprites[playerDirection][Math.floor(walkingIndex / (speed * 2))], 0, 0, 16, 32, -playerX, -playerY, 16*scale, 32*scale);
 }
 drawCanvas();
+
+function canWalk(x, y){
+    context.drawImage(mapMaskImage, mapX, 0, 765, 318, 0, 0, canvas.width*1.3, canvas.height);
+    const data = context.getImageData(x, y, 1, 1);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    console.log(data.data)
+    return data.data[0] === 0;
+}
