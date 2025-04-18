@@ -13,8 +13,11 @@ let myPokemon;
 let foePokemonPromise = fetch(`https://pokeapi.co/api/v2/pokemon/${randomPokemonNumber}`)
     .then(res => res.json())
     .then(data => foePokemon = data);
-
-let myPokemonPromise = fetch(`https://pokeapi.co/api/v2/pokemon/${randomPokemonNumber}`)
+let selectedPokemon = localStorage.getItem("pokemon");
+if (selectedPokemon === null) {
+    selectedPokemon = 1;
+}
+let myPokemonPromise = fetch(`https://pokeapi.co/api/v2/pokemon/${selectedPokemon}`)
     .then(res => res.json())
     .then(data => myPokemon = data);
 
@@ -32,9 +35,9 @@ Promise.all([foePokemonPromise, myPokemonPromise])
         myPokemonHP = myPokemon.stats[0].base_stat;
         foePokemonImage.src = foePokemon.sprites.front_default;
         myPokemonImage.src = myPokemon.sprites.back_default;
-        
+
         let myPokemonAttackPromises = [];
-        
+
         for (let i = 0; i < 4; i++) {
             let moveUrl = myPokemon.moves[i].move.url;
             let move = fetch(moveUrl)
@@ -51,28 +54,29 @@ Promise.all([foePokemonPromise, myPokemonPromise])
                 .then(data => foePokemonAttacks[i] = (data));
             foePokemonAttackPromises.push(move);
         }
-        
+
         await Promise.all(myPokemonAttackPromises + foePokemonAttackPromises);
-        
+
         requestAnimationFrame(animate);
 
         textArea.innerHTML = formatString(actionTextArray[0]);
-        setTimeout( _ => {
+        setTimeout(_ => {
             textArea.innerHTML = formatString(actionTextArray[1]);
             resetTextAnimation();
         }, 3000);
-        setTimeout( _ => {
+        setTimeout(_ => {
             textArea.innerHTML = formatString(actionTextArray[2]);
             resetTextAnimation();
         }, 5000);
-        setTimeout( _ => {
+        setTimeout(_ => {
             textArea.innerHTML = formatString(actionTextArray[3]);
             resetTextAnimation();
+            canStartBattle = true;
         }, 7000);
-        
+
     });
 
-function formatString(string, move = {name: ''}){
+function formatString(string, move = {name: ''}) {
     return string
         .replace('{myPokemon}', myPokemon.name)
         .replace('{foePokemon}', foePokemon.name)
@@ -83,7 +87,7 @@ function formatString(string, move = {name: ''}){
         .replace('{move}', move.name);
 }
 
-function resetTextAnimation(){
+function resetTextAnimation() {
     textArea.style.animation = 'none';
     textArea.offsetHeight;
     textArea.style.animation = null;
@@ -109,8 +113,7 @@ function setMyHealthBar(health) {
     setHealthBarColor(healthBar2, 209);
 }
 
-let actionTextArray = [
-    'A WILD {foePokemon} appeared', // 0
+let actionTextArray = ['A WILD {foePokemon} appeared', // 0
     'Go {myPokemon}!', // 1
     'What will {myPokemon} do?', // 2
     'Press 1, 2, 3, 4 for attack and 5 to flee <br> 1. {move1} 2. {move2} 3. {move3} 4. {move4}', // 3
@@ -123,36 +126,36 @@ let actionTextArray = [
 ];
 
 function animateBall() {
-    
+
 }
 
-window.onkeydown = function(event) {
+window.onkeydown = function (event) {
     if (!canStartBattle) return;
     if (!myTurn) return;
-    
+
     let move;
-    if (event.key === '1'){
+    if (event.key === '1') {
         myTurn = false;
         move = myPokemonAttacks[0];
-    }
-    else if (event.key === '2'){
+    } else if (event.key === '2') {
         myTurn = false;
         move = myPokemonAttacks[1];
-    }
-    else if (event.key === '3'){
+    } else if (event.key === '3') {
         myTurn = false;
         move = myPokemonAttacks[2];
-    }
-    else if (event.key === '4'){
+    } else if (event.key === '4') {
         myTurn = false;
         move = myPokemonAttacks[3];
     }
-    
+    else if (event.key === '5') {
+        lose();
+    }
+
     if (move === undefined) return;
-    
+
     console.log('You played ' + move.name);
     let accuracy = move.accuracy;
-    if (accuracy < Math.random() * 100){
+    if (accuracy < Math.random() * 100) {
         console.log('move failed');
         textArea.innerHTML = formatString(actionTextArray[9]);
         resetTextAnimation();
@@ -160,12 +163,12 @@ window.onkeydown = function(event) {
         return;
     }
     let damage = move.power / 5;
-    foePokemonHP -= damage;
+    foePokemonHP = Math.max(0, foePokemonHP - damage);
     setFoeHealthBar(foePokemonHP);
     console.log('foehp: ' + foePokemonHP);
     textArea.innerHTML = formatString(actionTextArray[7], move);
     resetTextAnimation();
-    if (foePokemonHP < 0) {
+    if (foePokemonHP <= 0) {
         win();
         return;
     }
@@ -191,24 +194,25 @@ function lose() {
         window.location.pathname = '/index.html';
     }, 7000);
 }
+
 function foeAttack() {
     let randomMove = Math.floor(Math.random() * 4)
     let move = foePokemonAttacks[randomMove];
     console.log('foe played' + move.name);
     let accuracy = move.accuracy;
-    if (accuracy < Math.random() * 100){
+    if (accuracy < Math.random() * 100) {
         console.log('move failed');
         textArea.innerHTML = formatString(actionTextArray[9]);
         resetTextAnimation();
         myTurn = true;
     }
     let damage = move.power / 5;
-    myPokemonHP -= damage;
+    myPokemonHP = Math.max(0, myPokemonHP - damage);
     console.log('myhp: ' + myPokemonHP);
     setMyHealthBar(myPokemonHP);
     textArea.innerHTML = formatString(actionTextArray[8], move);
     resetTextAnimation();
-    if (myPokemonHP <= 0){
+    if (myPokemonHP <= 0) {
         lose();
         return;
     }
@@ -227,8 +231,8 @@ for (let i = 0; i < 5; i++) {
 }
 
 let canStartBattle = false;
+
 function animateMyPokemon() {
-    canStartBattle = true;
     context.drawImage(myPokemonImage, -grassAnimCounter, 0, canvas.width, canvas.height, 250, canvas.height * 0.651 - myPokemonImage.height * 2.2, myPokemonImage.width * 45, myPokemonImage.height * 45);
     requestAnimationFrame(animateMyPokemon);
 }
@@ -264,8 +268,7 @@ let grassAnimDone = false;
 let grassAnimCounter = 0;
 
 function animateGrassAndPokemon() {
-    if (!grassAnimDone)
-    {
+    if (!grassAnimDone) {
         grassAnimCounter += 2;
     }
 
@@ -274,10 +277,9 @@ function animateGrassAndPokemon() {
     context.drawImage(statusBar1, -grassAnimCounter, 0, canvas.width, canvas.height, 0, 300, statusBar1.width * 80, statusBar1.height * 150);
     context.drawImage(grass1, -350 + grassAnimCounter, 0, canvas.width, canvas.height, 0, 300, grass2.width * 60, grass2.height * 150);
     context.drawImage(statusBar2, -350 + grassAnimCounter, -100, canvas.width, canvas.height, 0, 300, statusBar2.width * 80, statusBar2.height * 100);
-    context.drawImage(foePokemonImage, -650 + grassAnimCounter * 1.7, 0, canvas.width, canvas.height, 0, -105 + foePokemonImage.height * 1.6, foePokemonImage.width*45, foePokemonImage.height*45);
-    
-    if (!grassAnimDone)
-    {
+    context.drawImage(foePokemonImage, -650 + grassAnimCounter * 1.7, 0, canvas.width, canvas.height, 0, -105 + foePokemonImage.height * 1.6, foePokemonImage.width * 45, foePokemonImage.height * 45);
+
+    if (!grassAnimDone) {
         context.drawImage(throwerImages[0], 0, 0, canvas.width, canvas.height, grassAnimCounter * 4, canvas.height * 0.55, throwerImages[0].width * 100, throwerImages[0].height * 50);
     }
 }
@@ -286,7 +288,6 @@ function setHealthBarColor(div, maxWidth) {
     const width = parseFloat(getComputedStyle(div).width);
     const percentage = Math.min(Math.max(width / maxWidth, 0), 1);
 
-    // Interpolate from red (255, 0, 0) to green (0, 255, 0)
     const red = Math.round(255 * (1 - percentage));
     const green = Math.round(255 * percentage);
     div.style.backgroundColor = `rgb(${red}, ${green}, 0)`;

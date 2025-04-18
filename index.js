@@ -47,21 +47,27 @@ window.addEventListener('keydown', (event) => {
         walkingIndex %= speed * 4;
         console.log(`${playerX} - ${playerY}`);
 
-        if (playerX < -canvas.width/2 && !playerWalkCheck && playerDirection === 'right') {
-            mapX+=1;
+        if (playerX < -canvas.width / 2 && !playerWalkCheck && playerDirection === 'right') {
+            mapX += 1;
         }
 
-        if (playerX > -canvas.width/2 && !playerWalkCheck && playerDirection === 'left') {
-            mapX-=1;
+        if (playerX > -canvas.width / 2 && !playerWalkCheck && playerDirection === 'left') {
+            mapX -= 1;
         }
-        
+
         // mapMask[-playerY][-playerX] = 1;
         console.log(mapX)
         mapX = Math.max(0, Math.min(mapX, 175));
         playerX = Math.min(0, Math.max(playerX, -1920));
         playerY = Math.min(0, Math.max(playerY, -1080));
     }
+    if (playerY === -365 && playerX - mapX< -890 && playerX - mapX > -1100 && event.key === "Enter"){
+        window.location.href = './select.html'
+    }
 
+    if (playerY === -470 && playerX - mapX< -1270 && playerX - mapX > -1370 && event.key === "Enter"){
+        window.location.href = './battle.html'
+    }
     drawCanvas();
 });
 
@@ -87,7 +93,7 @@ for (let direction of ['up', 'down', 'left', 'right']) {
     let arr = []
     for (let x = 0; x < 2; x++) {
         let img = new Image();
-        img.src = `./assets/player/player-${direction}-${x+1}.png`;
+        img.src = `./assets/player/player-${direction}-${x + 1}.png`;
         arr.push(img);
     }
     let img = new Image();
@@ -97,17 +103,15 @@ for (let direction of ['up', 'down', 'left', 'right']) {
 }
 
 function drawCanvas() {
-
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(map, mapX, 0, 765, 318, 0, 0, canvas.width*1.3, canvas.height);
-    // context.drawImage(mapMaskImage, 0, 0, 765, 318, mapX, 0, canvas.width*1.3, canvas.height);
-
-    context.drawImage(playerSprites[playerDirection][Math.floor(walkingIndex / (speed * 2))], 0, 0, 16, 32, -playerX, -playerY, 16*scale, 32*scale);
+    context.drawImage(map, mapX, 0, 765, 318, 0, 0, canvas.width * 1.3, canvas.height);
+    context.drawImage(playerSprites[playerDirection][Math.floor(walkingIndex / (speed * 2))], 0, 0, 16, 32, -playerX, -playerY, 16 * scale, 32 * scale);
 }
-drawCanvas();
 
-function canWalk(x, y){
-    context.drawImage(mapMaskImage, mapX, 0, 765, 318, 0, 0, canvas.width*1.3, canvas.height);
+map.onload = _ => drawCanvas();
+
+function canWalk(x, y) {
+    context.drawImage(mapMaskImage, mapX, 0, 765, 318, 0, 0, canvas.width * 1.3, canvas.height);
     const data = context.getImageData(x, y, 1, 1);
     context.clearRect(0, 0, canvas.width, canvas.height);
     console.log(data.data)
