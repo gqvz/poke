@@ -4,6 +4,11 @@ const textArea = document.getElementsByClassName('typewriter')[0];
 const healthBar1 = document.getElementById('bar-1');
 const healthBar2 = document.getElementById('bar-2');
 
+const audio = new Audio();
+audio.src = './assets/battle.mp3';
+audio.loop = true;
+audio.play();
+
 const randomPokemonNumber = Math.floor(Math.random() * 10) + 1
 
 context.imageSmoothingEnabled = false;

@@ -2,6 +2,11 @@ const canvas = document.querySelector('canvas');
 const context = canvas.getContext('2d');
 context.imageSmoothingEnabled = false;
 
+const audio = new Audio();
+audio.src = './assets/music.mp3';
+audio.loop = true;
+audio.play();
+
 let playerDirection = "down";
 let walkingIndex = 0;
 const speed = 15;

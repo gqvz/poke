@@ -17,9 +17,11 @@ body {
 .pokemon-list {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
 }
 
 .pokemon {
+    margin: 1rem;
     display: flex;
     flex-direction: column;
 }
@@ -42,4 +44,8 @@ img {
 
 .pokemon:hover {
     background-color: lightgray;
+}
+
+.selected {
+    background-color: limegreen;
 }
