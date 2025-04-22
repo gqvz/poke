@@ -49,3 +49,7 @@ img {
 .selected {
     background-color: limegreen;
 }
+
+.selected:hover {
+    background-color: green;
+}

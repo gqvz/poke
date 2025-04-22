@@ -1,8 +1,11 @@
 
-const numPokemons = 5;
-const canSelect = 3;
+const numPokemons = 8;
+const canSelect = 4;
 const pokemonIndices = [0];
-const pokemons = [{}];
+const pokemons = JSON.parse(localStorage.getItem('pokemons') ?? "[]");
+
+let selectedPokemon = [];
+
 window.onload = async _ => {
     let randomPokemonNumber = Math.floor(Math.random() * numPokemons) + 1;
     for (let i = 0; i < numPokemons; i++) {
@@ -20,7 +23,7 @@ window.onload = async _ => {
     await Promise.all(promisesArray);
     
     const card = document.getElementsByClassName('pokemon')[0];
-    console.log(card);
+
     const cardParent = card.parentElement;
     
     for (let i = 0; i < numPokemons - 1; i++) {
@@ -31,8 +34,45 @@ window.onload = async _ => {
     for (let i = 0; i < cards.length; i++) {
         const image = cards[i].children.item(0).children.item(0);
         const name = cards[i].children.item(1);
-        console.log(image)
         image.src = pokemons[i].sprites.front_default;
         name.innerText = pokemons[i].name;
+        cards[i].onclick = _ => selectPokemon(i);
+    }
+}
+
+function selectPokemon(index) {
+    const cards = document.getElementsByClassName("pokemon");
+    let toggle = []
+    toggle.push(index);
+    if (selectedPokemon.length >= canSelect && selectedPokemon.indexOf(index) === -1 && selectedPokemon.length > 0) {
+        toggle.push(selectedPokemon[0]);
+        selectedPokemon = selectedPokemon.slice(1);
+    }
+
+    if (selectedPokemon.indexOf(index) !== -1) {
+        console.log('splicing' + index)
+        selectedPokemon.splice(selectedPokemon.indexOf(index), 1);
+    }
+    else {
+        console.log('pushing index' + index)
+        selectedPokemon.push(index);
+    }
+    
+    
+    for (let i = 0; i < toggle.length; i++) {
+        cards[toggle[i]].classList.toggle('selected');
+    }
+    const selectedPokemonObjects = [];
+
+    for (let i = 0; i < selectedPokemon.length; i++) {
+        selectedPokemonObjects.push(pokemons[selectedPokemon[i]]);
+    }
+
+    localStorage.setItem('pokemons', JSON.stringify(selectedPokemonObjects));
+}
+
+window.onkeydown = e => {
+    if (e.key === 'Enter') {
+        window.location.href = 'index.html';
     }
 }

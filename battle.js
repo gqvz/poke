@@ -9,46 +9,53 @@ audio.src = './assets/battle.mp3';
 audio.loop = true;
 audio.play();
 
-const randomPokemonNumber = Math.floor(Math.random() * 10) + 1
+let state = 'wait';
+const randomPokemonNumber = Math.floor(Math.random() * 50) + 20
 
 context.imageSmoothingEnabled = false;
 let foePokemon;
-let myPokemon;
+let mySelectedPokemons = JSON.parse(localStorage.getItem('pokemons'));
 
 let foePokemonPromise = fetch(`https://pokeapi.co/api/v2/pokemon/${randomPokemonNumber}`)
     .then(res => res.json())
     .then(data => foePokemon = data);
-let selectedPokemon = localStorage.getItem("pokemon");
-if (selectedPokemon === null) {
-    selectedPokemon = 1;
-}
-let myPokemonPromise = fetch(`https://pokeapi.co/api/v2/pokemon/${selectedPokemon}`)
-    .then(res => res.json())
-    .then(data => myPokemon = data);
+let selectedPokemon = 0;
+
+let myPokemon = _ => mySelectedPokemons[selectedPokemon];
 
 let foePokemonAttacks = [{}, {}, {}, {}];
-let myPokemonAttacks = [{}, {}, {}, {}];
+let myPokemonsAttacks = Array.from({length: mySelectedPokemons.length}, _ => [{}, {}, {}, {}]);
+let myPokemonAttacks = _ => myPokemonsAttacks[selectedPokemon];
+
+let myPokemonsHPs = [0];
 
 let foePokemonHP = 0;
-let myPokemonHP = 0;
+let myPokemonHP = _ => myPokemonsHPs[selectedPokemon];
 
-Promise.all([foePokemonPromise, myPokemonPromise])
+console.log(mySelectedPokemons);
+Promise.all([foePokemonPromise])
     .then(async _ => {
-        console.log(myPokemon);
-        console.log(foePokemon);
         foePokemonHP = foePokemon.stats[0].base_stat;
-        myPokemonHP = myPokemon.stats[0].base_stat;
+        for (let i = 0; i < mySelectedPokemons.length; i++) {
+            myPokemonsHPs[i] = mySelectedPokemons[i].stats[0].base_stat;
+        }
         foePokemonImage.src = foePokemon.sprites.front_default;
-        myPokemonImage.src = myPokemon.sprites.back_default;
-
+        for (let i = 0; i < mySelectedPokemons.length; i++) {
+            myPokemonImages[i] = new Image();
+            myPokemonImages[i].src = mySelectedPokemons[i].sprites.back_default;
+        }
+        
         let myPokemonAttackPromises = [];
 
-        for (let i = 0; i < 4; i++) {
-            let moveUrl = myPokemon.moves[i].move.url;
-            let move = fetch(moveUrl)
-                .then(res => res.json())
-                .then(data => myPokemonAttacks[i] = (data));
-            myPokemonAttackPromises.push(move);
+        for (let x = 0; x < mySelectedPokemons.length; x++) {
+            for (let i = 0; i < 4; i++) {
+                let moveUrl = mySelectedPokemons[x].moves[i].move.url;
+
+                let move = fetch(moveUrl)
+                    .then(res => res.json())
+                    .then(data => myPokemonsAttacks[x][i] = (data));
+                myPokemonAttackPromises.push(move);
+            }
         }
 
         let foePokemonAttackPromises = [];
@@ -63,6 +70,7 @@ Promise.all([foePokemonPromise, myPokemonPromise])
         await Promise.all(myPokemonAttackPromises + foePokemonAttackPromises);
 
         requestAnimationFrame(animate);
+        console.log(myPokemonAttacks())
 
         textArea.innerHTML = formatString(actionTextArray[0]);
         setTimeout(_ => {
@@ -74,22 +82,25 @@ Promise.all([foePokemonPromise, myPokemonPromise])
             resetTextAnimation();
         }, 5000);
         setTimeout(_ => {
-            textArea.innerHTML = formatString(actionTextArray[3]);
+            textArea.innerHTML = formatString(actionTextArray[10]);
             resetTextAnimation();
-            canStartBattle = true;
+            state = 'action';
         }, 7000);
 
     });
 
 function formatString(string, move = {name: ''}) {
+    console.log(selectedPokemon);
+    console.log(mySelectedPokemons)
     return string
-        .replace('{myPokemon}', myPokemon.name)
+        .replace('{myPokemon}', myPokemon().name)
         .replace('{foePokemon}', foePokemon.name)
-        .replace('{move1}', myPokemonAttacks[0].name)
-        .replace('{move2}', myPokemonAttacks[1].name)
-        .replace('{move3}', myPokemonAttacks[2].name)
-        .replace('{move4}', myPokemonAttacks[3].name)
-        .replace('{move}', move.name);
+        .replace('{move1}', myPokemonAttacks()[0].name)
+        .replace('{move2}', myPokemonAttacks()[1].name)
+        .replace('{move3}', myPokemonAttacks()[2].name)
+        .replace('{move4}', myPokemonAttacks()[3].name)
+        .replace('{move}', move.name)
+        .replace('{pokemons}', mySelectedPokemons.map((pokemon, index) => `${index+1}. ${pokemon.name}`).join(' '));
 }
 
 function resetTextAnimation() {
@@ -114,70 +125,126 @@ function setFoeHealthBar(health) {
 }
 
 function setMyHealthBar(health) {
-    healthBar2.style.width = (health * 209 / myPokemon.stats[0].base_stat) + 'px';
+    healthBar2.style.width = (health * 209 / myPokemon().stats[0].base_stat) + 'px';
     setHealthBarColor(healthBar2, 209);
 }
 
-let actionTextArray = ['A WILD {foePokemon} appeared', // 0
+let actionTextArray = [
+    'A WILD {foePokemon} appeared', // 0
     'Go {myPokemon}!', // 1
     'What will {myPokemon} do?', // 2
-    'Press 1, 2, 3, 4 for attack and 5 to flee <br> 1. {move1} 2. {move2} 3. {move3} 4. {move4}', // 3
+    'Press 1, 2, 3, 4 for attack and 5 to go back <br> 1. {move1} 2. {move2} 3. {move3} 4. {move4}', // 3
     'WILD {foePokemon} fainted! You win!', // 4
     '{myPokemon} fainted! You lost!', // 5
     '{myPokemon} gained {xp} xp', // 6
     '{myPokemon} used {move}', // 7
     'WILD {foePokemon} used {move}', // 8
     'Attack failed', // 9
+    'Select an action: <br> 1. Fight 2. Switch 3. Flee', // 10
+    'Come back! {myPokemon}!', // 11
+    'Select a pokemon: <br> {pokemons}' // 12
 ];
 
 function animateBall() {
-
+    
 }
 
 window.onkeydown = function (event) {
-    if (!canStartBattle) return;
-    if (!myTurn) return;
+    console.log(myPokemonsHPs)
+    switch (state) {
+        case 'wait':
+            return;
+        case 'fight':
+            if (!myTurn) return;
 
-    let move;
-    if (event.key === '1') {
-        myTurn = false;
-        move = myPokemonAttacks[0];
-    } else if (event.key === '2') {
-        myTurn = false;
-        move = myPokemonAttacks[1];
-    } else if (event.key === '3') {
-        myTurn = false;
-        move = myPokemonAttacks[2];
-    } else if (event.key === '4') {
-        myTurn = false;
-        move = myPokemonAttacks[3];
-    }
-    else if (event.key === '5') {
-        lose();
-    }
+            let move;
+            if (event.key === '1') {
+                myTurn = false;
+                move = myPokemonAttacks()[0];
+            } else if (event.key === '2') {
+                myTurn = false;
+                move = myPokemonAttacks()[1];
+            } else if (event.key === '3') {
+                myTurn = false;
+                move = myPokemonAttacks()[2];
+            } else if (event.key === '4') {
+                myTurn = false;
+                move = myPokemonAttacks()[3];
+            } else if (event.key === '5') {
+                textArea.innerHTML = formatString(actionTextArray[10]);
+                resetTextAnimation();
+                state = 'action';
+            }
 
-    if (move === undefined) return;
+            if (move === undefined) return;
 
-    console.log('You played ' + move.name);
-    let accuracy = move.accuracy;
-    if (accuracy < Math.random() * 100) {
-        console.log('move failed');
-        textArea.innerHTML = formatString(actionTextArray[9]);
-        resetTextAnimation();
-        setTimeout(foeAttack, 1000);
-        return;
+            console.log('You played ' + move.name);
+            let accuracy = move.accuracy;
+            if (accuracy < Math.random() * 100) {
+                console.log('move failed');
+                textArea.innerHTML = formatString(actionTextArray[9]);
+                resetTextAnimation();
+                setTimeout(foeAttack, 1000);
+                return;
+            }
+            let damage = move.power / 5;
+            foePokemonHP = Math.max(0, foePokemonHP - damage);
+            setFoeHealthBar(foePokemonHP);
+            console.log('foehp: ' + foePokemonHP);
+            textArea.innerHTML = formatString(actionTextArray[7], move);
+            resetTextAnimation();
+            if (foePokemonHP <= 0) {
+                win();
+                return;
+            }
+            setTimeout(foeAttack, 2000);
+            break;
+        case 'action':
+            if (event.key === '1') {
+                textArea.innerHTML = formatString(actionTextArray[3]);
+                resetTextAnimation();
+                state = 'fight';
+            }
+            else if (event.key === '2') {
+                textArea.innerHTML = formatString(actionTextArray[3]);
+                resetTextAnimation();
+                state = 'poke';
+                textArea.innerHTML = formatString(actionTextArray[12]);
+                resetTextAnimation();
+            }
+            else if (event.key === '3') {
+                textArea.innerHTML = 'You lose!';
+                resetTextAnimation();
+                setTimeout(_ => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            }
+            break;
+        case 'poke':
+            let num = parseInt(event.key) - 1;
+            if (JSON.stringify(NaN) === JSON.stringify(num)){
+                break;
+            }
+
+            if (num < mySelectedPokemons.length+1) {
+                state = 'wait';
+                textArea.innerHTML = formatString(actionTextArray[11]);
+                resetTextAnimation();
+                setTimeout(_ => {
+                    selectedPokemon = num;
+                    textArea.innerHTML = formatString(actionTextArray[1]);
+                    resetTextAnimation();
+                    setMyHealthBar(myPokemonHP());
+                }, 2000);
+                setTimeout(_ => {
+                    textArea.innerHTML = formatString(actionTextArray[10]);
+                    resetTextAnimation();
+                    state = 'action';
+                }, 4000);
+                
+            }
+            break;
     }
-    let damage = move.power / 5;
-    foePokemonHP = Math.max(0, foePokemonHP - damage);
-    setFoeHealthBar(foePokemonHP);
-    console.log('foehp: ' + foePokemonHP);
-    textArea.innerHTML = formatString(actionTextArray[7], move);
-    resetTextAnimation();
-    if (foePokemonHP <= 0) {
-        win();
-        return;
-    }
-    setTimeout(foeAttack, 2000);
 }
 
 function win() {
@@ -212,12 +279,12 @@ function foeAttack() {
         myTurn = true;
     }
     let damage = move.power / 5;
-    myPokemonHP = Math.max(0, myPokemonHP - damage);
-    console.log('myhp: ' + myPokemonHP);
-    setMyHealthBar(myPokemonHP);
+    myPokemonsHPs[selectedPokemon] = Math.max(0, myPokemonHP() - damage);
+    console.log('myhp: ' + myPokemonHP());
+    setMyHealthBar(myPokemonHP());
     textArea.innerHTML = formatString(actionTextArray[8], move);
     resetTextAnimation();
-    if (myPokemonHP <= 0) {
+    if (myPokemonHP() <= 0) {
         lose();
         return;
     }
@@ -235,10 +302,8 @@ for (let i = 0; i < 5; i++) {
     throwerImages.push(image);
 }
 
-let canStartBattle = false;
-
 function animateMyPokemon() {
-    context.drawImage(myPokemonImage, -grassAnimCounter, 0, canvas.width, canvas.height, 250, canvas.height * 0.651 - myPokemonImage.height * 2.2, myPokemonImage.width * 45, myPokemonImage.height * 45);
+    context.drawImage(myPokemonImage(), -grassAnimCounter, 0, canvas.width, canvas.height, 250, canvas.height * 0.651 - myPokemonImage().height * 2.2, myPokemonImage().width * 45, myPokemonImage().height * 45);
     requestAnimationFrame(animateMyPokemon);
 }
 
@@ -267,7 +332,8 @@ const statusBar2 = new Image();
 statusBar2.src = './assets/statusbar2.png';
 
 const foePokemonImage = new Image();
-const myPokemonImage = new Image();
+const myPokemonImage = _ => myPokemonImages[selectedPokemon];
+const myPokemonImages = []
 
 let grassAnimDone = false;
 let grassAnimCounter = 0;

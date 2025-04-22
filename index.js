@@ -43,7 +43,7 @@ window.addEventListener('keydown', (event) => {
         if (playerDirection === 'right') {
             playerX -= speed * 0.5;
         }
-        const playerWalkCheck = !canWalk(-playerX, -playerY + 70) || !canWalk(-playerX, -playerY + 90) || !canWalk(-playerX + 40, -playerY + 70);
+        const playerWalkCheck = !(canWalk(-playerX + 40, -playerY + 70) !== 'n' && canWalk(-playerX, -playerY + 90) !== 'n' && canWalk(-playerX, -playerY + 70) !== 'n');
         if (playerWalkCheck) {
             playerX = prevPlayerX;
             playerY = prevPlayerY;
@@ -66,11 +66,13 @@ window.addEventListener('keydown', (event) => {
         playerX = Math.min(0, Math.max(playerX, -1920));
         playerY = Math.min(0, Math.max(playerY, -1080));
     }
-    if (playerY === -365 && playerX - mapX< -890 && playerX - mapX > -1100 && event.key === "Enter"){
+
+    const cwMid = canWalk(-playerX + 20, -playerY + 70);
+    if (cwMid === 'r' && event.key === 'Enter'){
         window.location.href = './select.html'
     }
 
-    if (playerY === -470 && playerX - mapX< -1270 && playerX - mapX > -1370 && event.key === "Enter"){
+    if (cwMid === 'b' && event.key === 'Enter'){
         window.location.href = './battle.html'
     }
     drawCanvas();
@@ -120,5 +122,17 @@ function canWalk(x, y) {
     const data = context.getImageData(x, y, 1, 1);
     context.clearRect(0, 0, canvas.width, canvas.height);
     console.log(data.data)
-    return data.data[0] === 0;
+    if (data.data[0] === data.data[1] && data.data[1] === data.data[2] && data.data[2] === 255) {
+        return 'n'
+    }
+    if (data.data[0] === data.data[1] && data.data[1] === data.data[2] && data.data[2] === 0) {
+        return 'w';
+    }
+    if (data.data[0] === 0 && data.data[1] === 0 && data.data[2] === 255) {
+        return 'b';
+    }
+    if (data.data[0] === 255 && data.data[1] === 0 && data.data[2] === 0) {
+        return 'r';
+    }
 }
+
