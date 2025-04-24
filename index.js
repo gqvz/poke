@@ -151,7 +151,7 @@ function drawCanvas() {
 
 map.onload = _ => {
     drawCanvas();
-    keyDownHandler({key:'Space'})
+    setTimeout(_ => keyDownHandler({key:'Space'}), 50);
 }
 
 function canWalk(x, y) {

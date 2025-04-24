@@ -4,6 +4,7 @@ const textArea = document.getElementsByClassName('typewriter')[0];
 const healthBar1 = document.getElementById('bar-1');
 const healthBar2 = document.getElementById('bar-2');
 
+context.font = "50px VT323";
 const audio = new Audio();
 audio.src = './assets/battle.mp3';
 audio.loop = true;
@@ -17,9 +18,10 @@ let foePokemon;
 let mySelectedPokemons = JSON.parse(localStorage.getItem('pokemons'));
 let myPokemonPromise = Promise.resolve();
 if (mySelectedPokemons === null) {
-    myPokemonPromise = fetch("https://pokeapi.co/api/v2/pokemon/1")
-        .then(res => res.json())
-        .then(data => mySelectedPokemons = [data]);
+    const block = document.getElementsByClassName('block')[0];
+    block.style.display = 'block';
+    block.innerText = "Please select pokemon before going into battle";
+    setTimeout(_ => window.location.href = 'index.html', 2000);
 }
 
 let foePokemonPromise = fetch(`https://pokeapi.co/api/v2/pokemon/${randomPokemonNumber}`)
@@ -97,10 +99,10 @@ function formatString(string, move = {name: ''}) {
     return string
         .replace('{myPokemon}', myPokemon().name)
         .replace('{foePokemon}', foePokemon.name)
-        .replace('{move1}', myPokemonAttacks()[0].name)
-        .replace('{move2}', myPokemonAttacks()[1].name)
-        .replace('{move3}', myPokemonAttacks()[2].name)
-        .replace('{move4}', myPokemonAttacks()[3].name)
+        .replace('{move1}', `${myPokemonAttacks()[0].name} (${myPokemonAttacks()[0].power}|${myPokemonAttacks()[0].accuracy}%)`)
+        .replace('{move2}', `${myPokemonAttacks()[1].name} (${myPokemonAttacks()[1].power}|${myPokemonAttacks()[1].accuracy}%)`)
+        .replace('{move3}', `${myPokemonAttacks()[2].name} (${myPokemonAttacks()[2].power}|${myPokemonAttacks()[2].accuracy}%)`)
+        .replace('{move4}', `${myPokemonAttacks()[3].name} (${myPokemonAttacks()[3].power}|${myPokemonAttacks()[3].accuracy}%)`)
         .replace('{move}', move.name)
         .replace('{pokemons}', mySelectedPokemons.map((pokemon, index) => `${index+1}. ${pokemon.name}`).join(' '));
 }
@@ -135,7 +137,7 @@ let actionTextArray = [
     'A WILD {foePokemon} appeared', // 0
     'Go {myPokemon}!', // 1
     'What will {myPokemon} do?', // 2
-    'Press 1, 2, 3, 4 for attack and 5 to go back <br> 1. {move1} 2. {move2} 3. {move3} 4. {move4}', // 3
+    'Press 1, 2, 3, 4 for attack and 5 to go back <br> <span class="attacks"> 1. {move1} 2. {move2} 3. {move3} 4. {move4} </span>', // 3
     'WILD {foePokemon} fainted! You win!', // 4
     '{myPokemon} fainted! You lost!', // 5
     '{myPokemon} gained {xp} xp', // 6
@@ -344,6 +346,8 @@ function animateGrassAndPokemon() {
     context.drawImage(statusBar1, -grassAnimCounter, 0, canvas.width, canvas.height, 0, 300, statusBar1.width * 80, statusBar1.height * 150);
     context.drawImage(grass1, -350 + grassAnimCounter, 0, canvas.width, canvas.height, 0, 300, grass2.width * 60, grass2.height * 150);
     context.drawImage(statusBar2, -350 + grassAnimCounter, -100, canvas.width, canvas.height, 0, 300, statusBar2.width * 80, statusBar2.height * 100);
+    context.fillText(`${myPokemon().name}`, 1580 - grassAnimCounter * 4.3, 690);
+    context.fillText(`WILD ${foePokemon.name}`, 20 + grassAnimCounter * 4.3, 350);
     context.drawImage(foePokemonImage, -650 + grassAnimCounter * 1.7, 0, canvas.width, canvas.height, 0, -105 + foePokemonImage.height * 1.6, foePokemonImage.width * 45, foePokemonImage.height * 45);
 
     if (!grassAnimDone) {
