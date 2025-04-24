@@ -7,9 +7,9 @@ const pokemons = JSON.parse(localStorage.getItem('pokemons') ?? "[]");
 let selectedPokemon = [];
 
 window.onload = async _ => {
-    let randomPokemonNumber = Math.floor(Math.random() * numPokemons) + 1;
+    let randomPokemonNumber = Math.floor(Math.random() * 100) + 1;
     for (let i = 0; i < numPokemons; i++) {
-        pokemonIndices[i] = (randomPokemonNumber += Math.floor(Math.random() * numPokemons) + 1);
+        pokemonIndices[i] = (randomPokemonNumber += Math.floor(Math.random() * 100) + 1);
     }
     
     let promisesArray = [];
@@ -21,6 +21,8 @@ window.onload = async _ => {
     }
     
     await Promise.all(promisesArray);
+
+    setTimeout(_ => document.getElementsByClassName('loading-screen')[0].style.display = 'none', 500);
     
     const card = document.getElementsByClassName('pokemon')[0];
 

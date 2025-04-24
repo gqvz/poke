@@ -10,11 +10,17 @@ audio.loop = true;
 audio.play();
 
 let state = 'wait';
-const randomPokemonNumber = Math.floor(Math.random() * 50) + 20
+const randomPokemonNumber = Math.floor(Math.random() * 1000) + 20
 
 context.imageSmoothingEnabled = false;
 let foePokemon;
 let mySelectedPokemons = JSON.parse(localStorage.getItem('pokemons'));
+let myPokemonPromise = Promise.resolve();
+if (mySelectedPokemons === null) {
+    myPokemonPromise = fetch("https://pokeapi.co/api/v2/pokemon/1")
+        .then(res => res.json())
+        .then(data => mySelectedPokemons = [data]);
+}
 
 let foePokemonPromise = fetch(`https://pokeapi.co/api/v2/pokemon/${randomPokemonNumber}`)
     .then(res => res.json())
@@ -24,7 +30,7 @@ let selectedPokemon = 0;
 let myPokemon = _ => mySelectedPokemons[selectedPokemon];
 
 let foePokemonAttacks = [{}, {}, {}, {}];
-let myPokemonsAttacks = Array.from({length: mySelectedPokemons.length}, _ => [{}, {}, {}, {}]);
+let myPokemonsAttacks = Array.from({length: mySelectedPokemons?.length ?? 1}, _ => [{}, {}, {}, {}]);
 let myPokemonAttacks = _ => myPokemonsAttacks[selectedPokemon];
 
 let myPokemonsHPs = [0];
@@ -33,7 +39,7 @@ let foePokemonHP = 0;
 let myPokemonHP = _ => myPokemonsHPs[selectedPokemon];
 
 console.log(mySelectedPokemons);
-Promise.all([foePokemonPromise])
+Promise.all([foePokemonPromise, myPokemonPromise])
     .then(async _ => {
         foePokemonHP = foePokemon.stats[0].base_stat;
         for (let i = 0; i < mySelectedPokemons.length; i++) {
@@ -70,7 +76,6 @@ Promise.all([foePokemonPromise])
         await Promise.all(myPokemonAttackPromises + foePokemonAttackPromises);
 
         requestAnimationFrame(animate);
-        console.log(myPokemonAttacks())
 
         textArea.innerHTML = formatString(actionTextArray[0]);
         setTimeout(_ => {
