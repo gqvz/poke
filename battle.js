@@ -282,15 +282,38 @@ function foeAttack() {
     setMyHealthBar(myPokemonHP());
     textArea.innerHTML = formatString(actionTextArray[8], move);
     resetTextAnimation();
+    let switching = false;
     if (myPokemonHP() <= 0) {
-        lose();
-        return;
-    }
-    setTimeout(_ => {
-        textArea.innerHTML = formatString(actionTextArray[3]);
+        if (mySelectedPokemons.length === 1){
+            lose();
+            return;
+        }
+        switching = true;
+        textArea.innerHTML = `${myPokemon().name} fainted`;
         resetTextAnimation();
-        myTurn = true;
-    }, 2000);
+        state = 'wait';
+        setTimeout(_ => {
+            console.log('changing');
+            mySelectedPokemons.splice(selectedPokemon, 1);
+            myPokemonImages.splice(selectedPokemon, 1);
+            myPokemonsHPs.splice(selectedPokemon, 1)
+            selectedPokemon = 0;
+            setMyHealthBar(myPokemonHP());
+            state = 'action';
+        }, 2000);
+        setTimeout(_ => {
+            textArea.innerHTML = formatString(actionTextArray[10]);
+            resetTextAnimation();
+            state = 'action';
+        }, 4000);
+    }
+    if (!switching){
+        setTimeout(_ => {
+            textArea.innerHTML = formatString(actionTextArray[3]);
+            resetTextAnimation();
+            myTurn = true;
+        }, 2000);
+    }
 }
 
 let throwerImages = [];
