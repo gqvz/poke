@@ -38,7 +38,6 @@ let myPokemonsHPs = [0];
 let foePokemonHP = 0;
 let myPokemonHP = _ => myPokemonsHPs[selectedPokemon];
 
-console.log(mySelectedPokemons);
 Promise.all([foePokemonPromise, myPokemonPromise])
     .then(async _ => {
         foePokemonHP = foePokemon.stats[0].base_stat;
@@ -95,8 +94,6 @@ Promise.all([foePokemonPromise, myPokemonPromise])
     });
 
 function formatString(string, move = {name: ''}) {
-    console.log(selectedPokemon);
-    console.log(mySelectedPokemons)
     return string
         .replace('{myPokemon}', myPokemon().name)
         .replace('{foePokemon}', foePokemon.name)
@@ -155,7 +152,6 @@ function animateBall() {
 }
 
 window.onkeydown = function (event) {
-    console.log(myPokemonsHPs)
     switch (state) {
         case 'wait':
             return;
@@ -183,10 +179,8 @@ window.onkeydown = function (event) {
 
             if (move === undefined) return;
 
-            console.log('You played ' + move.name);
             let accuracy = move.accuracy;
             if (accuracy < Math.random() * 100) {
-                console.log('move failed');
                 textArea.innerHTML = formatString(actionTextArray[9]);
                 resetTextAnimation();
                 setTimeout(foeAttack, 1000);
@@ -195,7 +189,6 @@ window.onkeydown = function (event) {
             let damage = move.power / 5;
             foePokemonHP = Math.max(0, foePokemonHP - damage);
             setFoeHealthBar(foePokemonHP);
-            console.log('foehp: ' + foePokemonHP);
             textArea.innerHTML = formatString(actionTextArray[7], move);
             resetTextAnimation();
             if (foePokemonHP <= 0) {
@@ -220,6 +213,7 @@ window.onkeydown = function (event) {
             else if (event.key === '3') {
                 textArea.innerHTML = 'You lose!';
                 resetTextAnimation();
+                state = 'wait';
                 setTimeout(_ => {
                     window.location.href = 'index.html';
                 }, 1500);
@@ -231,7 +225,7 @@ window.onkeydown = function (event) {
                 break;
             }
 
-            if (num < mySelectedPokemons.length+1) {
+            if (num < mySelectedPokemons.length) {
                 state = 'wait';
                 textArea.innerHTML = formatString(actionTextArray[11]);
                 resetTextAnimation();
@@ -275,17 +269,14 @@ function lose() {
 function foeAttack() {
     let randomMove = Math.floor(Math.random() * 4)
     let move = foePokemonAttacks[randomMove];
-    console.log('foe played' + move.name);
     let accuracy = move.accuracy;
     if (accuracy < Math.random() * 100) {
-        console.log('move failed');
         textArea.innerHTML = formatString(actionTextArray[9]);
         resetTextAnimation();
         myTurn = true;
     }
     let damage = move.power / 5;
     myPokemonsHPs[selectedPokemon] = Math.max(0, myPokemonHP() - damage);
-    console.log('myhp: ' + myPokemonHP());
     setMyHealthBar(myPokemonHP());
     textArea.innerHTML = formatString(actionTextArray[8], move);
     resetTextAnimation();

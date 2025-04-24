@@ -14,7 +14,7 @@ audio.play();
 let playerDirection = [];
 let walkingIndex = 0;
 const speed = 35;
-let mapX = 0;
+let mapX = parseInt(localStorage.getItem('mapX') ?? '0');
 
 const keyDirectionMap = {
     'w': 'up',
@@ -27,7 +27,9 @@ const keyDirectionMap = {
     'ArrowRight': 'right'
 }
 
-window.addEventListener('keydown', (event) => {
+window.addEventListener('keydown', keyDownHandler);
+
+function keyDownHandler(event) {
     if (event.key === 'Escape') {
         instructionScreen.style.visibility = 'hidden';
         localStorage.setItem('instructions', 'false');
@@ -37,7 +39,6 @@ window.addEventListener('keydown', (event) => {
         if (playerDirection.indexOf(keyDirectionMap[event.key]) === -1) {
             playerDirection.push(keyDirectionMap[event.key]);
         }
-        console.log(playerDirection);
         walkingIndex += speed;
 
         let prevPlayerX = playerX;
@@ -55,6 +56,7 @@ window.addEventListener('keydown', (event) => {
         if (playerDirection.indexOf('right') !== -1) {
             playerX -= speed * 0.5;
         }
+
         const playerWalkCheck = !(canWalk(-playerX + 40, -playerY + 70) !== 'n' && canWalk(-playerX, -playerY + 90) !== 'n' && canWalk(-playerX, -playerY + 70) !== 'n');
         if (playerWalkCheck) {
             playerX = prevPlayerX;
@@ -62,23 +64,22 @@ window.addEventListener('keydown', (event) => {
         }
 
         walkingIndex %= speed * 4;
-        console.log(`${playerX} - ${playerY}`);
 
-        if (playerX < -canvas.width / 2 && !playerWalkCheck && playerDirection === 'right') {
-            mapX += 1;
+        if (playerX < -canvas.width / 2 && !playerWalkCheck && playerDirection.indexOf('right') !== -1) {
+            mapX += 3;
         }
 
-        if (playerX > -canvas.width / 2 && !playerWalkCheck && playerDirection === 'left') {
-            mapX -= 1;
+        if (playerX > -canvas.width / 2 && !playerWalkCheck && playerDirection.indexOf('left') !== -1) {
+            mapX -= 3;
         }
 
-        console.log(mapX)
         mapX = Math.max(0, Math.min(mapX, 175));
         playerX = Math.min(0, Math.max(playerX, -1920));
         playerY = Math.min(0, Math.max(playerY, -1080));
 
         localStorage.setItem('playerX', playerX);
         localStorage.setItem('playerY', playerY);
+        localStorage.setItem('mapX', mapX);
     }
 
     const cwMid = canWalk(-playerX + 20, -playerY + 70);
@@ -109,7 +110,7 @@ window.addEventListener('keydown', (event) => {
     }
 
     drawCanvas();
-});
+}
 
 window.addEventListener('keyup', (event) => {
     if (event.key in keyDirectionMap) {
@@ -119,8 +120,8 @@ window.addEventListener('keyup', (event) => {
     drawCanvas();
 });
 
-let playerX = localStorage.getItem("playerX") ?? -500;
-let playerY = localStorage.getItem("playerY") ?? -170;
+let playerX = parseFloat(localStorage.getItem("playerX") ?? "-500");
+let playerY = parseFloat(localStorage.getItem("playerY") ?? "-170");
 const scale = 3;
 
 const map = new Image()
@@ -148,13 +149,15 @@ function drawCanvas() {
     context.drawImage(playerSprites[playerDirection[playerDirection.length - 1] ?? 'down'][Math.floor(walkingIndex / (speed * 2))], 0, 0, 16, 32, -playerX, -playerY, 16 * scale, 32 * scale);
 }
 
-map.onload = drawCanvas;
+map.onload = _ => {
+    drawCanvas();
+    keyDownHandler({key:'Space'})
+}
 
 function canWalk(x, y) {
     context.drawImage(mapMaskImage, mapX, 0, 765, 318, 0, 0, canvas.width * 1.3, canvas.height);
     const data = context.getImageData(x, y, 1, 1);
     context.clearRect(0, 0, canvas.width, canvas.height);
-    console.log(data.data)
     if (data.data[0] === data.data[1] && data.data[1] === data.data[2] && data.data[2] === 255) {
         return 'n'
     }

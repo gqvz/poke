@@ -52,11 +52,9 @@ function selectPokemon(index) {
     }
 
     if (selectedPokemon.indexOf(index) !== -1) {
-        console.log('splicing' + index)
         selectedPokemon.splice(selectedPokemon.indexOf(index), 1);
     }
     else {
-        console.log('pushing index' + index)
         selectedPokemon.push(index);
     }
     
