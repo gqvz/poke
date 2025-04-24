@@ -117,7 +117,13 @@ img {
 .attacks {
     font-size: 2rem;
 }
-@media (max-width: 750px) {
+@media (max-width: 850px) {
+    .block {
+        display: block;
+    }
+}
+
+@media (max-height: 850px) {
     .block {
         display: block;
     }
